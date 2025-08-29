@@ -1,1 +1,10 @@
-spring.application.name=financeinspector
+spring:
+  application:
+    name: FinanceInspector
+
+  #  data:
+  #    redis:
+  #      host: localhost
+  #      port: 6379
+  profiles:
+    active: local
