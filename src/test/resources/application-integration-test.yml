@@ -1,0 +1,29 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:integrationTestDb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: sa
+  h2:
+    console:
+      enabled: false
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+  sql:
+    init:
+      schema-locations: classpath:integration-test-schema.sql
+      # Don't load data.sql for integration tests - we'll create our own test data
+      data-locations:
+      mode: always
+
+logging:
+  level:
+    com.mycodethesaurus.financeinspector: INFO
+    org.springframework.web: WARN
+    org.hibernate: WARN
