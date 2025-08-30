@@ -1,0 +1,31 @@
+name,description,color_code,icon_name,parent_id,is_active,sort_order,created_on,updated_on
+Food & Dining,Restaurant meals and grocery expenses,#FF5722,restaurant,,true,1,2024-01-01 12:00:00.000000,2024-01-01 12:00:00.000000
+Transportation,Vehicle and travel related expenses,#2196F3,directions_car,,true,2,2024-01-01 12:00:00.000000,2024-01-01 12:00:00.000000
+Shopping,Retail purchases and consumer goods,#9C27B0,shopping_bag,,true,3,2024-01-01 12:00:00.000000,2024-01-01 12:00:00.000000
+Bills & Utilities,Monthly bills and utility payments,#607D8B,receipt_long,,true,4,2024-01-01 12:00:00.000000,2024-01-01 12:00:00.000000
+Healthcare,Medical and health related expenses,#4CAF50,medical_services,,true,5,2024-01-01 12:00:00.000000,2024-01-01 12:00:00.000000
+Groceries,Supermarket and grocery shopping,#FF5722,grocery_store,1,true,1,2024-01-01 12:00:00.000000,2024-01-01 12:00:00.000000
+Restaurants,Dining out at restaurants,#FF5722,restaurant,1,true,2,2024-01-01 12:00:00.000000,2024-01-01 12:00:00.000000
+Fast Food,Quick service restaurants,#FF5722,fastfood,1,true,3,2024-01-01 12:00:00.000000,2024-01-01 12:00:00.000000
+Coffee & Snacks,Cafes and snack purchases,#FF5722,local_cafe,1,true,4,2024-01-01 12:00:00.000000,2024-01-01 12:00:00.000000
+Alcohol & Bars,Alcoholic beverages and bars,#FF5722,local_bar,1,true,5,2024-01-01 12:00:00.000000,2024-01-01 12:00:00.000000
+Fuel & Gas,Vehicle fuel expenses,#2196F3,local_gas_station,2,true,1,2024-01-01 12:00:00.000000,2024-01-01 12:00:00.000000
+Public Transport,Bus train metro tickets,#2196F3,train,2,true,2,2024-01-01 12:00:00.000000,2024-01-01 12:00:00.000000
+Taxi & Rideshare,Uber Lyft taxi services,#2196F3,local_taxi,2,true,3,2024-01-01 12:00:00.000000,2024-01-01 12:00:00.000000
+Parking,Parking fees and permits,#2196F3,local_parking,2,true,4,2024-01-01 12:00:00.000000,2024-01-01 12:00:00.000000
+Vehicle Maintenance,Car repairs and maintenance,#2196F3,build,2,true,5,2024-01-01 12:00:00.000000,2024-01-01 12:00:00.000000
+Clothing,Apparel and accessories,#9C27B0,checkroom,3,true,1,2024-01-01 12:00:00.000000,2024-01-01 12:00:00.000000
+Electronics,Gadgets and electronic devices,#9C27B0,devices,3,true,2,2024-01-01 12:00:00.000000,2024-01-01 12:00:00.000000
+Home & Garden,Household items and gardening,#9C27B0,home,3,true,3,2024-01-01 12:00:00.000000,2024-01-01 12:00:00.000000
+Books & Media,Books movies music,#9C27B0,book,3,true,4,2024-01-01 12:00:00.000000,2024-01-01 12:00:00.000000
+Gifts,Presents and gift purchases,#9C27B0,card_giftcard,3,true,5,2024-01-01 12:00:00.000000,2024-01-01 12:00:00.000000
+Electricity,Electric utility bills,#607D8B,flash_on,4,true,1,2024-01-01 12:00:00.000000,2024-01-01 12:00:00.000000
+Water,Water utility bills,#607D8B,water_drop,4,true,2,2024-01-01 12:00:00.000000,2024-01-01 12:00:00.000000
+Internet & Phone,Telecom and internet services,#607D8B,wifi,4,true,3,2024-01-01 12:00:00.000000,2024-01-01 12:00:00.000000
+Insurance,Various insurance premiums,#607D8B,security,4,true,4,2024-01-01 12:00:00.000000,2024-01-01 12:00:00.000000
+Subscriptions,Monthly service subscriptions,#607D8B,subscriptions,4,true,5,2024-01-01 12:00:00.000000,2024-01-01 12:00:00.000000
+Doctor Visits,Medical consultations,#4CAF50,local_hospital,5,true,1,2024-01-01 12:00:00.000000,2024-01-01 12:00:00.000000
+Pharmacy,Medications and prescriptions,#4CAF50,local_pharmacy,5,true,2,2024-01-01 12:00:00.000000,2024-01-01 12:00:00.000000
+Dental Care,Dental treatments and checkups,#4CAF50,dentistry,5,true,3,2024-01-01 12:00:00.000000,2024-01-01 12:00:00.000000
+Health Insurance,Health insurance premiums,#4CAF50,health_and_safety,5,true,4,2024-01-01 12:00:00.000000,2024-01-01 12:00:00.000000
+Fitness & Wellness,Gym and wellness expenses,#4CAF50,fitness_center,5,true,5,2024-01-01 12:00:00.000000,2024-01-01 12:00:00.000000
