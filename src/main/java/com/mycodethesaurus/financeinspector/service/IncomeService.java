@@ -111,4 +111,23 @@ public class IncomeService {
     salaryIncomeRepository.deleteById(incomeId);
     log.info("Salary income record deleted successfully with id: {}", incomeId);
   }
+
+  /**
+   * Checks if a salary income record is owned by the specified user.
+   *
+   * @param incomeId the ID of the income record to check
+   * @param userId the ID of the user to check ownership for
+   * @return true if the income record is owned by the user, false otherwise
+   */
+  @Transactional(readOnly = true)
+  public boolean isIncomeOwnedByUser(Long incomeId, Long userId) {
+    if (incomeId == null || userId == null) {
+      return false;
+    }
+
+    return salaryIncomeRepository
+        .findById(incomeId)
+        .map(income -> income.getUserEntity().getId().equals(userId))
+        .orElse(false);
+  }
 }

@@ -22,24 +22,21 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 @ExtendWith(MockitoExtension.class)
-@WebMvcTest(UserController.class)
 @DisplayName("UserController Unit Tests")
 class UserControllerTest {
 
-  @Autowired private MockMvc mockMvc;
+  private MockMvc mockMvc;
 
-  @MockBean private UserService userService;
+  @Mock private UserService userService;
 
-  @Autowired private ObjectMapper objectMapper;
+  private ObjectMapper objectMapper;
 
   private UserCreateRequest createRequest;
   private UserUpdateRequest updateRequest;
@@ -47,6 +44,7 @@ class UserControllerTest {
 
   @BeforeEach
   void setUp() {
+    objectMapper = new ObjectMapper();
     mockMvc =
         MockMvcBuilders.standaloneSetup(new UserController(userService))
             .setControllerAdvice(new CustomGlobalExceptionHandler())

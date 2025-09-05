@@ -3,10 +3,12 @@ package com.mycodethesaurus.financeinspector.integration;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mycodethesaurus.financeinspector.config.AbstractIntegrationTest;
 import com.mycodethesaurus.financeinspector.dto.SalaryIncomeCreateRequest;
 import com.mycodethesaurus.financeinspector.dto.SalaryIncomeDto;
 import com.mycodethesaurus.financeinspector.dto.SalaryIncomeUpdateRequest;
@@ -21,18 +23,16 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.ActiveProfiles;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
-@SpringBootTest
 @AutoConfigureMockMvc
-@ActiveProfiles("integration-test")
 @Transactional
+@WithMockUser(roles = "ADMIN")
 @DisplayName("Salary Income Integration Tests")
-class SalaryIncomeIntegrationTest {
+class SalaryIncomeIntegrationTest extends AbstractIntegrationTest {
 
   @Autowired private MockMvc mockMvc;
 
@@ -64,7 +64,8 @@ class SalaryIncomeIntegrationTest {
             .perform(
                 post("/v1/users")
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(userRequest)))
+                    .content(objectMapper.writeValueAsString(userRequest))
+                    .with(csrf()))
             .andExpect(status().isCreated())
             .andReturn()
             .getResponse()
@@ -101,7 +102,8 @@ class SalaryIncomeIntegrationTest {
             .perform(
                 post("/v1/incomes/salary")
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(validCreateRequest)))
+                    .content(objectMapper.writeValueAsString(validCreateRequest))
+                    .with(csrf()))
             .andExpect(status().isCreated())
             .andExpect(jsonPath("$.currencyCode").value("INR"))
             .andExpect(jsonPath("$.basicAmount").value(50000.00))
@@ -136,7 +138,8 @@ class SalaryIncomeIntegrationTest {
             .perform(
                 post("/v1/incomes/salary")
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(validCreateRequest)))
+                    .content(objectMapper.writeValueAsString(validCreateRequest))
+                    .with(csrf()))
             .andExpect(status().isCreated())
             .andReturn()
             .getResponse()
@@ -161,7 +164,8 @@ class SalaryIncomeIntegrationTest {
         .perform(
             post("/v1/incomes/salary")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(validCreateRequest)))
+                .content(objectMapper.writeValueAsString(validCreateRequest))
+                .with(csrf()))
         .andExpect(status().isCreated());
 
     SalaryIncomeCreateRequest secondIncome = new SalaryIncomeCreateRequest();
@@ -179,7 +183,8 @@ class SalaryIncomeIntegrationTest {
         .perform(
             post("/v1/incomes/salary")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(secondIncome)))
+                .content(objectMapper.writeValueAsString(secondIncome))
+                .with(csrf()))
         .andExpect(status().isCreated());
 
     // When & Then
@@ -199,7 +204,8 @@ class SalaryIncomeIntegrationTest {
         .perform(
             post("/v1/incomes/salary")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(validCreateRequest)))
+                .content(objectMapper.writeValueAsString(validCreateRequest))
+                .with(csrf()))
         .andExpect(status().isCreated());
 
     // When & Then
@@ -220,7 +226,8 @@ class SalaryIncomeIntegrationTest {
             .perform(
                 post("/v1/incomes/salary")
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(validCreateRequest)))
+                    .content(objectMapper.writeValueAsString(validCreateRequest))
+                    .with(csrf()))
             .andExpect(status().isCreated())
             .andReturn()
             .getResponse()
@@ -243,7 +250,8 @@ class SalaryIncomeIntegrationTest {
         .perform(
             put("/v1/incomes/salary/" + createdIncome.getId())
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(updateRequest)))
+                .content(objectMapper.writeValueAsString(updateRequest))
+                .with(csrf()))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.id").value(createdIncome.getId()))
         .andExpect(jsonPath("$.currencyCode").value("USD"))
@@ -309,7 +317,8 @@ class SalaryIncomeIntegrationTest {
         .perform(
             post("/v1/incomes/salary")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(invalidUserRequest)))
+                .content(objectMapper.writeValueAsString(invalidUserRequest))
+                .with(csrf()))
         .andExpect(status().isNotFound())
         .andExpect(jsonPath("$.error").value("Resource Not Found"))
         .andExpect(jsonPath("$.message").value("User not found with id: 99999"));
@@ -335,7 +344,7 @@ class SalaryIncomeIntegrationTest {
 
     // When & Then
     mockMvc
-        .perform(delete("/v1/incomes/salary/" + createdIncome.getId()))
+        .perform(delete("/v1/incomes/salary/" + createdIncome.getId()).with(csrf()))
         .andExpect(status().isNoContent());
 
     // Verify salary income is deleted
@@ -377,7 +386,8 @@ class SalaryIncomeIntegrationTest {
         .perform(
             put("/v1/incomes/salary/99999")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(updateRequest)))
+                .content(objectMapper.writeValueAsString(updateRequest))
+                .with(csrf()))
         .andExpect(status().isNotFound())
         .andExpect(jsonPath("$.error").value("Resource Not Found"))
         .andExpect(jsonPath("$.message").value("Salary income not found with id: 99999"));
@@ -392,7 +402,8 @@ class SalaryIncomeIntegrationTest {
             .perform(
                 post("/v1/incomes/salary")
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(validCreateRequest)))
+                    .content(objectMapper.writeValueAsString(validCreateRequest))
+                    .with(csrf()))
             .andExpect(status().isCreated())
             .andReturn()
             .getResponse()
@@ -416,7 +427,8 @@ class SalaryIncomeIntegrationTest {
         .perform(
             put("/v1/incomes/salary/" + createdIncome.getId())
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(partialUpdateRequest)))
+                .content(objectMapper.writeValueAsString(partialUpdateRequest))
+                .with(csrf()))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.currencyCode").value("USD")) // Should be updated
         .andExpect(jsonPath("$.basicAmount").value(75000.00)) // Should be updated

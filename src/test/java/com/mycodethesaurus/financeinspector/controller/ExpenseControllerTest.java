@@ -13,37 +13,53 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.mycodethesaurus.financeinspector.dto.ExpenseCreateRequest;
 import com.mycodethesaurus.financeinspector.dto.ExpenseResponse;
 import com.mycodethesaurus.financeinspector.dto.ExpenseUpdateRequest;
 import com.mycodethesaurus.financeinspector.enums.PaymentMethod;
 import com.mycodethesaurus.financeinspector.exception.ResourceNotFoundException;
+import com.mycodethesaurus.financeinspector.exception.handler.CustomGlobalExceptionHandler;
 import com.mycodethesaurus.financeinspector.service.ExpenseService;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-@WebMvcTest(ExpenseController.class)
+@ExtendWith(MockitoExtension.class)
 @DisplayName("Expense Controller Tests")
 class ExpenseControllerTest {
 
-  @MockBean private ExpenseService expenseService;
+  private MockMvc mockMvc;
 
-  @Autowired private MockMvc mockMvc;
+  @Mock private ExpenseService expenseService;
 
-  @Autowired private ObjectMapper objectMapper;
+  private ObjectMapper objectMapper;
+
+  @BeforeEach
+  void setUp() {
+    objectMapper = new ObjectMapper();
+    objectMapper.registerModule(new JavaTimeModule());
+    mockMvc =
+        MockMvcBuilders.standaloneSetup(new ExpenseController(expenseService))
+            .setControllerAdvice(new CustomGlobalExceptionHandler())
+            .setCustomArgumentResolvers(new PageableHandlerMethodArgumentResolver())
+            .build();
+  }
 
   @Test
   @DisplayName("Should create expense successfully")

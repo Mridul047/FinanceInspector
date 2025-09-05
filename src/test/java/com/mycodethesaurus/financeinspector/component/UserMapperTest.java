@@ -1,6 +1,7 @@
 package com.mycodethesaurus.financeinspector.component;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.when;
 
 import com.mycodethesaurus.financeinspector.dto.UserCreateRequest;
 import com.mycodethesaurus.financeinspector.dto.UserResponse;
@@ -14,13 +15,17 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("UserMapper Unit Tests")
 class UserMapperTest {
 
   @InjectMocks private UserMapper userMapper;
+
+  @Mock private PasswordEncoder passwordEncoder;
 
   private UserCreateRequest createRequest;
   private UserUpdateRequest updateRequest;
@@ -56,13 +61,16 @@ class UserMapperTest {
   @Test
   @DisplayName("Should map UserCreateRequest to UserEntity correctly")
   void shouldMapCreateRequestToEntityCorrectly() {
+    // Given
+    when(passwordEncoder.encode("password123")).thenReturn("encoded_password123");
+
     // When
     UserEntity result = userMapper.createRequestToEntity(createRequest);
 
     // Then
     assertNotNull(result);
-    assertEquals("testuser", result.getUserName());
-    assertEquals("password123", result.getPassword());
+    assertEquals("testuser", result.getUsername());
+    assertEquals("encoded_password123", result.getPassword());
     assertEquals("John", result.getFirstName());
     assertEquals("Doe", result.getLastName());
     assertEquals("john.doe@example.com", result.getEmail());

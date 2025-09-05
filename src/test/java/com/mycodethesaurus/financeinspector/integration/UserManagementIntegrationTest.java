@@ -3,10 +3,12 @@ package com.mycodethesaurus.financeinspector.integration;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mycodethesaurus.financeinspector.config.AbstractIntegrationTest;
 import com.mycodethesaurus.financeinspector.dto.UserCreateRequest;
 import com.mycodethesaurus.financeinspector.dto.UserResponse;
 import com.mycodethesaurus.financeinspector.dto.UserUpdateRequest;
@@ -17,18 +19,15 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.ActiveProfiles;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
-@SpringBootTest
 @AutoConfigureMockMvc
-@ActiveProfiles("integration-test")
 @Transactional
 @DisplayName("User Management Integration Tests")
-class UserManagementIntegrationTest {
+class UserManagementIntegrationTest extends AbstractIntegrationTest {
 
   @Autowired private MockMvc mockMvc;
 
@@ -59,6 +58,7 @@ class UserManagementIntegrationTest {
   }
 
   @Test
+  @WithMockUser(roles = "ADMIN")
   @DisplayName("Should create user successfully - Integration")
   void shouldCreateUserSuccessfully() throws Exception {
     // When & Then
@@ -67,7 +67,8 @@ class UserManagementIntegrationTest {
             .perform(
                 post("/v1/users")
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(validCreateRequest)))
+                    .content(objectMapper.writeValueAsString(validCreateRequest))
+                    .with(csrf()))
             .andExpect(status().isCreated())
             .andExpect(jsonPath("$.userName").value("integrationtest"))
             .andExpect(jsonPath("$.firstName").value("Integration"))
@@ -90,6 +91,7 @@ class UserManagementIntegrationTest {
   }
 
   @Test
+  @WithMockUser(roles = "ADMIN")
   @DisplayName("Should get user by ID successfully - Integration")
   void shouldGetUserByIdSuccessfully() throws Exception {
     // Given - Create a user first
@@ -98,7 +100,8 @@ class UserManagementIntegrationTest {
             .perform(
                 post("/v1/users")
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(validCreateRequest)))
+                    .content(objectMapper.writeValueAsString(validCreateRequest))
+                    .with(csrf()))
             .andExpect(status().isCreated())
             .andReturn()
             .getResponse()
@@ -116,6 +119,7 @@ class UserManagementIntegrationTest {
   }
 
   @Test
+  @WithMockUser(roles = "ADMIN")
   @DisplayName("Should get all users - Integration")
   void shouldGetAllUsers() throws Exception {
     // Given - Create two users
@@ -123,7 +127,8 @@ class UserManagementIntegrationTest {
         .perform(
             post("/v1/users")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(validCreateRequest)))
+                .content(objectMapper.writeValueAsString(validCreateRequest))
+                .with(csrf()))
         .andExpect(status().isCreated());
 
     UserCreateRequest secondUser = new UserCreateRequest();
@@ -137,7 +142,8 @@ class UserManagementIntegrationTest {
         .perform(
             post("/v1/users")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(secondUser)))
+                .content(objectMapper.writeValueAsString(secondUser))
+                .with(csrf()))
         .andExpect(status().isCreated());
 
     // When & Then
@@ -150,6 +156,7 @@ class UserManagementIntegrationTest {
   }
 
   @Test
+  @WithMockUser(roles = "ADMIN")
   @DisplayName("Should update user successfully - Integration")
   void shouldUpdateUserSuccessfully() throws Exception {
     // Given - Create a user first
@@ -158,7 +165,8 @@ class UserManagementIntegrationTest {
             .perform(
                 post("/v1/users")
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(validCreateRequest)))
+                    .content(objectMapper.writeValueAsString(validCreateRequest))
+                    .with(csrf()))
             .andExpect(status().isCreated())
             .andReturn()
             .getResponse()
@@ -176,7 +184,8 @@ class UserManagementIntegrationTest {
         .perform(
             put("/v1/users/" + createdUser.getId())
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(updateRequest)))
+                .content(objectMapper.writeValueAsString(updateRequest))
+                .with(csrf()))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.id").value(createdUser.getId()))
         .andExpect(jsonPath("$.firstName").value("Updated"))
@@ -186,6 +195,7 @@ class UserManagementIntegrationTest {
   }
 
   @Test
+  @WithMockUser(roles = "ADMIN")
   @DisplayName("Should handle validation errors correctly - Integration")
   void shouldHandleValidationErrors() throws Exception {
     // Given - Invalid request with multiple validation errors
@@ -202,7 +212,8 @@ class UserManagementIntegrationTest {
         .perform(
             post("/v1/users")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(invalidRequest)))
+                .content(objectMapper.writeValueAsString(invalidRequest))
+                .with(csrf()))
         .andExpect(status().isBadRequest())
         .andExpect(jsonPath("$.error").value("Validation Failed"))
         .andExpect(jsonPath("$.validationErrors").exists())
@@ -211,6 +222,7 @@ class UserManagementIntegrationTest {
   }
 
   @Test
+  @WithMockUser(roles = "ADMIN")
   @DisplayName("Should handle duplicate username - Integration")
   void shouldHandleDuplicateUsername() throws Exception {
     // Given - Create a user first
@@ -218,7 +230,8 @@ class UserManagementIntegrationTest {
         .perform(
             post("/v1/users")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(validCreateRequest)))
+                .content(objectMapper.writeValueAsString(validCreateRequest))
+                .with(csrf()))
         .andExpect(status().isCreated());
 
     // Create duplicate username request
@@ -234,13 +247,15 @@ class UserManagementIntegrationTest {
         .perform(
             post("/v1/users")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(duplicateRequest)))
+                .content(objectMapper.writeValueAsString(duplicateRequest))
+                .with(csrf()))
         .andExpect(status().isConflict())
         .andExpect(jsonPath("$.error").value("Duplicate Resource"))
         .andExpect(jsonPath("$.message").value("Username already exists: integrationtest"));
   }
 
   @Test
+  @WithMockUser(roles = "ADMIN")
   @DisplayName("Should handle duplicate email - Integration")
   void shouldHandleDuplicateEmail() throws Exception {
     // Given - Create a user first
@@ -248,7 +263,8 @@ class UserManagementIntegrationTest {
         .perform(
             post("/v1/users")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(validCreateRequest)))
+                .content(objectMapper.writeValueAsString(validCreateRequest))
+                .with(csrf()))
         .andExpect(status().isCreated());
 
     // Create duplicate email request
@@ -264,7 +280,8 @@ class UserManagementIntegrationTest {
         .perform(
             post("/v1/users")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(duplicateEmailRequest)))
+                .content(objectMapper.writeValueAsString(duplicateEmailRequest))
+                .with(csrf()))
         .andExpect(status().isConflict())
         .andExpect(jsonPath("$.error").value("Duplicate Resource"))
         .andExpect(
@@ -272,6 +289,7 @@ class UserManagementIntegrationTest {
   }
 
   @Test
+  @WithMockUser(roles = "ADMIN")
   @DisplayName("Should handle non-existent user - Integration")
   void shouldHandleNonExistentUser() throws Exception {
     // When & Then
@@ -283,6 +301,7 @@ class UserManagementIntegrationTest {
   }
 
   @Test
+  @WithMockUser(roles = "ADMIN")
   @DisplayName("Should delete user successfully - Integration")
   void shouldDeleteUserSuccessfully() throws Exception {
     // Given - Create a user first
@@ -291,7 +310,8 @@ class UserManagementIntegrationTest {
             .perform(
                 post("/v1/users")
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(validCreateRequest)))
+                    .content(objectMapper.writeValueAsString(validCreateRequest))
+                    .with(csrf()))
             .andExpect(status().isCreated())
             .andReturn()
             .getResponse()
@@ -301,7 +321,9 @@ class UserManagementIntegrationTest {
     assertEquals(1, userRepository.count());
 
     // When & Then
-    mockMvc.perform(delete("/v1/users/" + createdUser.getId())).andExpect(status().isNoContent());
+    mockMvc
+        .perform(delete("/v1/users/" + createdUser.getId()).with(csrf()))
+        .andExpect(status().isNoContent());
 
     // Verify user is deleted
     mockMvc.perform(get("/v1/users/" + createdUser.getId())).andExpect(status().isNotFound());
@@ -311,17 +333,19 @@ class UserManagementIntegrationTest {
   }
 
   @Test
+  @WithMockUser(roles = "ADMIN")
   @DisplayName("Should handle delete non-existent user - Integration")
   void shouldHandleDeleteNonExistentUser() throws Exception {
     // When & Then
     mockMvc
-        .perform(delete("/v1/users/99999"))
+        .perform(delete("/v1/users/99999").with(csrf()))
         .andExpect(status().isNotFound())
         .andExpect(jsonPath("$.error").value("Resource Not Found"))
         .andExpect(jsonPath("$.message").value("User not found with id: 99999"));
   }
 
   @Test
+  @WithMockUser(roles = "ADMIN")
   @DisplayName("Should handle update non-existent user - Integration")
   void shouldHandleUpdateNonExistentUser() throws Exception {
     // Given
@@ -334,13 +358,15 @@ class UserManagementIntegrationTest {
         .perform(
             put("/v1/users/99999")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(updateRequest)))
+                .content(objectMapper.writeValueAsString(updateRequest))
+                .with(csrf()))
         .andExpect(status().isNotFound())
         .andExpect(jsonPath("$.error").value("Resource Not Found"))
         .andExpect(jsonPath("$.message").value("User not found with id: 99999"));
   }
 
   @Test
+  @WithMockUser(roles = "ADMIN")
   @DisplayName("Should handle partial update correctly - Integration")
   void shouldHandlePartialUpdateCorrectly() throws Exception {
     // Given - Create a user first
@@ -349,7 +375,8 @@ class UserManagementIntegrationTest {
             .perform(
                 post("/v1/users")
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(validCreateRequest)))
+                    .content(objectMapper.writeValueAsString(validCreateRequest))
+                    .with(csrf()))
             .andExpect(status().isCreated())
             .andReturn()
             .getResponse()
@@ -367,7 +394,8 @@ class UserManagementIntegrationTest {
         .perform(
             put("/v1/users/" + createdUser.getId())
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(partialUpdateRequest)))
+                .content(objectMapper.writeValueAsString(partialUpdateRequest))
+                .with(csrf()))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.firstName").value("PartiallyUpdated"))
         .andExpect(jsonPath("$.lastName").value("Test")) // Should remain unchanged

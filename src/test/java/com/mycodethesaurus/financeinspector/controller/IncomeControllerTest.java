@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.mycodethesaurus.financeinspector.dto.SalaryIncomeCreateRequest;
 import com.mycodethesaurus.financeinspector.dto.SalaryIncomeDto;
 import com.mycodethesaurus.financeinspector.dto.SalaryIncomeUpdateRequest;
@@ -22,24 +23,21 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 @ExtendWith(MockitoExtension.class)
-@WebMvcTest(IncomeController.class)
 @DisplayName("IncomeController Unit Tests")
 class IncomeControllerTest {
 
-  @Autowired private MockMvc mockMvc;
+  private MockMvc mockMvc;
 
-  @MockBean private IncomeService incomeService;
+  @Mock private IncomeService incomeService;
 
-  @Autowired private ObjectMapper objectMapper;
+  private ObjectMapper objectMapper;
 
   private SalaryIncomeCreateRequest createRequest;
   private SalaryIncomeUpdateRequest updateRequest;
@@ -47,6 +45,9 @@ class IncomeControllerTest {
 
   @BeforeEach
   void setUp() {
+    objectMapper = new ObjectMapper();
+    objectMapper.registerModule(new JavaTimeModule());
+
     mockMvc =
         MockMvcBuilders.standaloneSetup(new IncomeController(incomeService))
             .setControllerAdvice(new CustomGlobalExceptionHandler())

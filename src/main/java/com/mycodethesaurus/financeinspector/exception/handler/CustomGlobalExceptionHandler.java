@@ -94,6 +94,19 @@ public class CustomGlobalExceptionHandler {
   @ExceptionHandler(Exception.class)
   public ResponseEntity<ErrorResponse> handleGenericException(
       Exception ex, HttpServletRequest request) {
+    // Don't handle Spring Security authorization exceptions - let Spring Security handle them
+    String exceptionName = ex.getClass().getName();
+    if (exceptionName.contains("AuthorizationDenied")
+        || exceptionName.contains("AccessDenied")
+        || exceptionName.contains("security.authorization")
+        || exceptionName.contains("security.access")) {
+      // Re-throw so Spring Security can handle it properly
+      if (ex instanceof RuntimeException) {
+        throw (RuntimeException) ex;
+      }
+      throw new RuntimeException(ex);
+    }
+
     log.error("Unexpected error occurred: ", ex);
     ErrorResponse error =
         ErrorResponse.builder()

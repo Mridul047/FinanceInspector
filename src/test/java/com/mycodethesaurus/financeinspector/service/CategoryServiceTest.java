@@ -273,6 +273,66 @@ class CategoryServiceTest {
     verify(categoryRepository, never()).save(any());
   }
 
+  @Test
+  @DisplayName("Should create global category with parent successfully")
+  void shouldCreateGlobalCategoryWithParentSuccessfully() {
+    // Given
+    String adminUser = "admin";
+    Long parentId = 2L;
+    mockCreateRequest.setParentId(parentId);
+
+    ExpenseCategoryEntity parentEntity = createMockCategoryEntity();
+    parentEntity.setId(parentId);
+
+    ExpenseCategoryEntity savedEntity = createMockCategoryEntity();
+    savedEntity.setCreatedBy(adminUser);
+    savedEntity.setUpdatedBy(adminUser);
+
+    when(categoryRepository.existsByNameIgnoreCase(mockCreateRequest.getName())).thenReturn(false);
+    when(categoryRepository.findActiveCategoryById(parentId)).thenReturn(Optional.of(parentEntity));
+    when(categoryMapper.createRequestToGlobalEntity(mockCreateRequest, parentEntity))
+        .thenReturn(mockCategoryEntity);
+    when(categoryRepository.save(any(ExpenseCategoryEntity.class))).thenReturn(savedEntity);
+    when(categoryMapper.entityToResponse(savedEntity)).thenReturn(mockCategoryResponse);
+
+    // When
+    CategoryResponse result = categoryService.createGlobalCategory(mockCreateRequest, adminUser);
+
+    // Then
+    assertNotNull(result);
+    assertEquals(mockCategoryResponse, result);
+    verify(categoryRepository).existsByNameIgnoreCase(mockCreateRequest.getName());
+    verify(categoryRepository).findActiveCategoryById(parentId);
+    verify(categoryMapper).createRequestToGlobalEntity(mockCreateRequest, parentEntity);
+    verify(categoryRepository).save(any(ExpenseCategoryEntity.class));
+    verify(categoryMapper).entityToResponse(savedEntity);
+  }
+
+  @Test
+  @DisplayName(
+      "Should throw ResourceNotFoundException when creating category with non-existent parent")
+  void shouldThrowResourceNotFoundExceptionWhenCreatingCategoryWithNonExistentParent() {
+    // Given
+    String adminUser = "admin";
+    Long parentId = 999L;
+    mockCreateRequest.setParentId(parentId);
+
+    when(categoryRepository.existsByNameIgnoreCase(mockCreateRequest.getName())).thenReturn(false);
+    when(categoryRepository.findActiveCategoryById(parentId)).thenReturn(Optional.empty());
+
+    // When & Then
+    ResourceNotFoundException exception =
+        assertThrows(
+            ResourceNotFoundException.class,
+            () -> categoryService.createGlobalCategory(mockCreateRequest, adminUser));
+
+    assertEquals("Parent category not found with id: " + parentId, exception.getMessage());
+    verify(categoryRepository).existsByNameIgnoreCase(mockCreateRequest.getName());
+    verify(categoryRepository).findActiveCategoryById(parentId);
+    verify(categoryRepository, never()).save(any());
+    verifyNoInteractions(categoryMapper);
+  }
+
   // ========== UPDATE GLOBAL CATEGORY TESTS ==========
 
   @Test
@@ -320,6 +380,156 @@ class CategoryServiceTest {
 
     assertEquals("Category not found with id: " + categoryId, exception.getMessage());
     verify(categoryRepository).findActiveCategoryById(categoryId);
+    verify(categoryRepository, never()).save(any());
+    verifyNoInteractions(categoryMapper);
+  }
+
+  @Test
+  @DisplayName("Should update global category with parent successfully")
+  void shouldUpdateGlobalCategoryWithParentSuccessfully() {
+    // Given
+    Long categoryId = 1L;
+    Long parentId = 2L;
+    String adminUser = "admin";
+    mockCreateRequest.setParentId(parentId);
+
+    ExpenseCategoryEntity parentEntity = createMockCategoryEntity();
+    parentEntity.setId(parentId);
+
+    ExpenseCategoryEntity updatedEntity = createMockCategoryEntity();
+    updatedEntity.setUpdatedBy(adminUser);
+
+    when(categoryRepository.findActiveCategoryById(categoryId))
+        .thenReturn(Optional.of(mockCategoryEntity));
+    when(categoryRepository.findActiveCategoryById(parentId)).thenReturn(Optional.of(parentEntity));
+    when(categoryRepository.findByNameIgnoreCase(mockCreateRequest.getName()))
+        .thenReturn(Optional.empty());
+    when(categoryRepository.save(any(ExpenseCategoryEntity.class))).thenReturn(updatedEntity);
+    when(categoryMapper.entityToResponse(updatedEntity)).thenReturn(mockCategoryResponse);
+
+    // When
+    CategoryResponse result =
+        categoryService.updateGlobalCategory(categoryId, mockCreateRequest, adminUser);
+
+    // Then
+    assertNotNull(result);
+    assertEquals(mockCategoryResponse, result);
+    verify(categoryRepository).findActiveCategoryById(categoryId);
+    verify(categoryRepository).findActiveCategoryById(parentId);
+    verify(categoryRepository).findByNameIgnoreCase(mockCreateRequest.getName());
+    verify(categoryRepository).save(any(ExpenseCategoryEntity.class));
+    verify(categoryMapper).entityToResponse(updatedEntity);
+  }
+
+  @Test
+  @DisplayName("Should throw ResourceNotFoundException when updating with non-existent parent")
+  void shouldThrowResourceNotFoundExceptionWhenUpdatingWithNonExistentParent() {
+    // Given
+    Long categoryId = 1L;
+    Long parentId = 999L;
+    String adminUser = "admin";
+    mockCreateRequest.setParentId(parentId);
+
+    when(categoryRepository.findActiveCategoryById(categoryId))
+        .thenReturn(Optional.of(mockCategoryEntity));
+    when(categoryRepository.findActiveCategoryById(parentId)).thenReturn(Optional.empty());
+
+    // When & Then
+    ResourceNotFoundException exception =
+        assertThrows(
+            ResourceNotFoundException.class,
+            () -> categoryService.updateGlobalCategory(categoryId, mockCreateRequest, adminUser));
+
+    assertEquals("Parent category not found with id: " + parentId, exception.getMessage());
+    verify(categoryRepository).findActiveCategoryById(categoryId);
+    verify(categoryRepository).findActiveCategoryById(parentId);
+    verify(categoryRepository, never()).save(any());
+    verifyNoInteractions(categoryMapper);
+  }
+
+  @Test
+  @DisplayName("Should throw IllegalArgumentException when category tries to be its own parent")
+  void shouldThrowIllegalArgumentExceptionWhenCategoryTriesToBeItsOwnParent() {
+    // Given
+    Long categoryId = 1L;
+    String adminUser = "admin";
+    mockCreateRequest.setParentId(categoryId); // Same as categoryId
+
+    when(categoryRepository.findActiveCategoryById(categoryId))
+        .thenReturn(Optional.of(mockCategoryEntity));
+
+    // When & Then
+    IllegalArgumentException exception =
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> categoryService.updateGlobalCategory(categoryId, mockCreateRequest, adminUser));
+
+    assertEquals("Category cannot be its own parent", exception.getMessage());
+    // Called twice - once for the category and once for the parent (same ID)
+    verify(categoryRepository, times(2)).findActiveCategoryById(categoryId);
+    verify(categoryRepository, never()).save(any());
+    verifyNoInteractions(categoryMapper);
+  }
+
+  @Test
+  @DisplayName("Should throw IllegalArgumentException when update would create cyclic reference")
+  void shouldThrowIllegalArgumentExceptionWhenUpdateWouldCreateCyclicReference() {
+    // Given
+    Long categoryId = 1L;
+    Long parentId = 2L;
+    String adminUser = "admin";
+    mockCreateRequest.setParentId(parentId);
+
+    // Create a scenario where parent category has our category as its parent (cycle)
+    ExpenseCategoryEntity parentEntity = createMockCategoryEntity();
+    parentEntity.setId(parentId);
+    parentEntity.setParent(
+        mockCategoryEntity); // Parent's parent is the category we're trying to update
+
+    when(categoryRepository.findActiveCategoryById(categoryId))
+        .thenReturn(Optional.of(mockCategoryEntity));
+    when(categoryRepository.findActiveCategoryById(parentId)).thenReturn(Optional.of(parentEntity));
+
+    // When & Then
+    IllegalArgumentException exception =
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> categoryService.updateGlobalCategory(categoryId, mockCreateRequest, adminUser));
+
+    assertEquals("Moving category would create a circular reference", exception.getMessage());
+    verify(categoryRepository).findActiveCategoryById(categoryId);
+    verify(categoryRepository).findActiveCategoryById(parentId);
+    verify(categoryRepository, never()).save(any());
+    verifyNoInteractions(categoryMapper);
+  }
+
+  @Test
+  @DisplayName("Should throw DuplicateResourceException when updating with existing name")
+  void shouldThrowDuplicateResourceExceptionWhenUpdatingWithExistingName() {
+    // Given
+    Long categoryId = 1L;
+    Long existingCategoryId = 2L;
+    String adminUser = "admin";
+
+    ExpenseCategoryEntity existingCategory = createMockCategoryEntity();
+    existingCategory.setId(existingCategoryId);
+
+    when(categoryRepository.findActiveCategoryById(categoryId))
+        .thenReturn(Optional.of(mockCategoryEntity));
+    when(categoryRepository.findByNameIgnoreCase(mockCreateRequest.getName()))
+        .thenReturn(Optional.of(existingCategory));
+
+    // When & Then
+    DuplicateResourceException exception =
+        assertThrows(
+            DuplicateResourceException.class,
+            () -> categoryService.updateGlobalCategory(categoryId, mockCreateRequest, adminUser));
+
+    assertEquals(
+        "Category name '" + mockCreateRequest.getName() + "' already exists",
+        exception.getMessage());
+    verify(categoryRepository).findActiveCategoryById(categoryId);
+    verify(categoryRepository).findByNameIgnoreCase(mockCreateRequest.getName());
     verify(categoryRepository, never()).save(any());
     verifyNoInteractions(categoryMapper);
   }
